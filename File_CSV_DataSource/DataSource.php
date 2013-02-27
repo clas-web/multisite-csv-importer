@@ -2139,27 +2139,44 @@ class File_CSV_DataSource
             return false;
         }
 
-        $c = 0;
         $d = $this->settings['delimiter'];
         $e = $this->settings['escape'];
         $l = $this->settings['length'];
-
+        $headers = null;
+        
         $res = fopen($this->_filename, 'r');
 
         while ($keys = fgetcsv($res, $l, $d, $e)) {
 
-            if ($c == 0) {
-                $this->headers = $keys;
-            } else {
-                array_push($this->rows, $keys);
-            }
-
-            $c ++;
+			if( ($headers == null) || ($keys[0] == 'h') )
+			{
+				if( $keys[0] == 'h' )
+					$headers = $keys;
+				
+			}
+			else if( $keys[0] == '' )
+			{
+				$row = array();
+				for( $i = 1; $i < count($keys); $i++ )
+				{
+					if( $headers[$i] !== '' )
+					{
+						$row[$headers[$i]] = $keys[$i];
+					}
+				}
+				array_push($this->rows, $row);
+			}
         }
 
         fclose($res);
-        $this->removeEmpty();
+        //$this->removeEmpty();
         return true;
+    }
+    
+    
+    public function get_rows()
+    {
+    	return $this->rows;
     }
 
     /**

@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: CSV Importer
-Description: Import data as posts from a CSV file. <em>You can reach the author at <a href="mailto:d.v.kobozev@gmail.com">d.v.kobozev@gmail.com</a></em>.
-Version: 0.3.7
-Author: Denis Kobozev
+Plugin Name: CSV Importer with UNCC Enhancements
+Description: Import data as posts from a CSV file. <em>You can reach the original author at <a href="mailto:d.v.kobozev@gmail.com">d.v.kobozev@gmail.com</a></em>.
+Version: 0.3.7.uncc
+Author: Denis Kobozev, Crystal Barton
 */
 
 /**

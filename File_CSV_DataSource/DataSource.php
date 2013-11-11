@@ -2150,12 +2150,14 @@ class File_CSV_DataSource
 
 			if( ($headers == null) || ($keys[0] == 'h') )
 			{
+				echo 'header';
 				if( $keys[0] == 'h' )
 					$headers = $keys;
 				
 			}
 			else if( $keys[0] == '' )
 			{
+				echo 'row';
 				$row = array();
 				for( $i = 1; $i < count($keys); $i++ )
 				{

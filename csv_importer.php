@@ -446,10 +446,7 @@ class CSVImporterPlugin
 
     	// password
     	if( !empty($data['password']) ) $post['post_password'] = $data['password'];
-    	
-    	// taxonomy
-    	$post['tax_input'] = $this->get_taxonomies($data);
-    	
+    	    	
 		return $post;
     }
     

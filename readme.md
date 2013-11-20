@@ -103,7 +103,6 @@ These four fields are required for all posts and pages.
 - _status_ : The post's status .  Valid options are:  "publish", "pending", "draft", "future", "private", "trash".
 - _menu-order_ : The int value given to determine the posts order in the menu.
 - _password_ : Password for post (default: no password).
-- _tax_input_ : 
 - _categories_ : One or more categories seperated by a comma. _Posts only._
 - _tag_ : One or more tags seperated by a comma. _Posts only._
 
@@ -126,7 +125,6 @@ These four fields are required for all posts and pages.
 - _status_ : The post's status .  Valid options are:  "publish", "pending", "draft", "future", "private", "trash".
 - _menu-order_ : The int value given to determine the posts order in the menu.
 - _password_ : Password for post (default: no password).
-- _tax_input_ : 
 - _categories_ : One or more categories seperated by a comma. _Posts only._
 - _tag_ : One or more tags seperated by a comma. _Posts only._
 
@@ -167,7 +165,7 @@ These four fields are required for all posts and pages.
 
 ** Required Fields **
 
-These four fields are required for all posts and pages.
+These four fields are required for all links.
 
 - _site_ : The slug of the site.
 - _type_ : The type of resource to alter.  Valid types are: post, page, link

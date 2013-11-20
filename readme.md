@@ -63,7 +63,7 @@ a CSV file represents a post, page, or link.
 
 ### Posts and Pages
 
-** Required Fields **
+__Required Fields__
 
 These four fields are required for all posts and pages.
 
@@ -163,7 +163,7 @@ These four fields are required for all posts and pages.
 
 ### Links
 
-** Required Fields **
+__Required Fields__
 
 These four fields are required for all links.
 
@@ -234,7 +234,7 @@ These four fields are required for all links.
 
 ### Change Log
 
-** New in version 0.3.2 ** 
+__New in version 0.3.2 __
   
 In prior versions, importing rows as pages could be specified on a per-file basis using the plugins UI. In 0.3.2, `csv_post_type` column was added to support custom post types as well.
 Refer to the WordPress [documentation on custom post types][custom_post_types] for more info on how to set up custom post types.
@@ -243,7 +243,7 @@ Refer to the WordPress [documentation on custom post types][custom_post_types] f
 
 - `csv_post_categories` - a comma separated list of category names or ids.
 
-** New in version 0.3.5 ** 
+__New in version 0.3.5 __
 
 It's also possible to assign posts to non-existing subcategories, using &gt; to denote category relationships, e.g. `Animalia > Chordata > Mammalia`.  If any of the categories in the chain does not exist, the plugin will automatically create it. It's also possible to specify the parent category using an id, as in `42 > Primates > Callitrichidae`, where `42` is an existing category id.
 
@@ -289,18 +289,18 @@ name. The data in that column will be imported as the custom fields value.
 
 ## Custom taxonomies
 
-** New in version 0.3.0 ** 
+__New in version 0.3.0 __
 
 Once custom taxonomies are set up in your theme's functions.php file or
 by using a 3rd party plugin, `csv_ctax_(taxonomy name)` columns can be 
 used to assign imported data to the taxonomies.
 
-** Non-hierarchical taxonomies ** 
+__Non-hierarchical taxonomies __
 
 The syntax for non-hierarchical taxonomies is straightforward and is essentially
 the same as the `csv_post_tags` syntax.
 
-** Hierarchical taxonomies ** 
+__Hierarchical taxonomies __
 
 The syntax for hierarchical taxonomies is more complicated. Each hierarchical
 taxonomy field is a tiny two-column CSV file, where _the order of columns
@@ -320,7 +320,7 @@ columns are regular ASCII double quotes, not typographical quotes like “
 
 ## Comments
 
-** New in version 0.3.1 ** 
+__New in version 0.3.1 __
 
 An example file with comments is included in the `examples` directory.
 In short, comments can be imported along with posts by specifying columns
@@ -441,53 +441,53 @@ Contributors:
 
 ## Changelog
 
-- ** 0.3.7 ** 
+- __0.3.7 __
   - Make hierarchical custom taxonomy line splitting more robust
   - Fix deprecation warnings
-- ** 0.3.6 ** 
+- __0.3.6 __
   - Fix category cleanup bug
-- ** 0.3.5 ** 
+- __0.3.5 __
   - Added 'greater-than' category syntax
   - Updated the docs
-- ** 0.3.4 ** 
+- __0.3.4 __
   - Added csv_post_parent column
   - Updated the docs
   - Got rid of a deprecation warning
-- ** 0.3.3 ** 
+- __0.3.3 __
   - Fixes incompatibility with versions of WordPress prior to 3.0 introduced
     in previous release.
-- ** 0.3.2 ** 
+- __0.3.2 __
   - Added ability to specify custom post type.
-- ** 0.3.1 ** 
+- __0.3.1 __
   - Import comments.
   - Updated php-csv-parser - the plugin should no longer create files in /tmp.
-- ** 0.3.0 ** 
+- __0.3.0 __
   - Custom taxonomies.
-- ** 0.2.4 ** 
+- __0.2.4 __
   - Root category selection, cleaner HTML.
-- ** 0.2.3 ** 
+- __0.2.3 __
   - Slight speed increase, support for post_author and post_name.
-- ** 0.2.2 ** 
+- __0.2.2 __
   - Bugfix release to deal with BOM that may occur in UTF-8 encoded files.
-- ** 0.2.1 ** 
+- __0.2.1 __
   - Ability to import rows as pages, not posts.
   - Starting with this version, you can also specify category ids instead of
     names.
-- ** 0.2.0 ** 
+- __0.2.0 __
   - Ability to handle CSV files where the number of cells in rows does not
     match the number of columns
   - Smart date parsing
   - Code cleanup.
-- ** 0.1.3 ** 
+- __0.1.3 __
   - New option to import posts with published status.
-- ** 0.1.2 ** 
+- __0.1.2 __
   - Added support for post excerpts.
-- ** 0.1.1 ** 
+- __0.1.1 __
   - Code cleanup
   - Changed column names for CSV input. Sorry if it breaks anything for you,
     folks, but it had to be done in order to allow for custom fields such as
     `title` ([All in One SEO Pack][1] uses those, for example).
-- ** v0.1.0 ** 
+- __v0.1.0 __
   - Initial version of the plugin
 
 [1]: http://wordpress.org/extend/plugins/all-in-one-seo-pack/
@@ -496,25 +496,25 @@ Contributors:
 
 ## Upgrade Notice
 
-- ** 0.3.7 ** 
+- __0.3.7 __
   - More robust handling of hierarchical custom taxonomies; removed deprecation
     warnings.
-- ** 0.3.6 ** 
+- __0.3.6 __
   - Fix for 'Invalid argument supplied for foreach() on line 268' error message
-- ** 0.3.5 ** 
+- __0.3.5 __
   - Subcategory creation support. Documentation update.
-- ** 0.3.4 ** 
+- __0.3.4 __
   - Post parent support. Documentation update.
-- ** 0.3.3 ** 
+- __0.3.3 __
   - Fixes "Call to undefined function post_type_exists()" error for versions of
     Wordpress prior to 3.0
-- ** 0.3.2 ** 
+- __0.3.2 __
   - Adds support for custom post types. Option to import pages has been removed 
     from the interface. To import a page, add csv_post_type column to your csv 
     file and set it to "page".
-- ** 0.3.1 ** 
+- __0.3.1 __
   - Adds support for comments
-- ** 0.3.0 ** 
+- __0.3.0 __
   - Adds support for custom taxonomies
 
 

@@ -232,7 +232,7 @@ These four fields are required for all links.
 - _replace-text_ : The text to replace the matched portion of the subject.
 
 
-### Change Log
+### New Features
 
 __New in version 0.3.2__
   

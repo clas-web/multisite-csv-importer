@@ -1,0 +1,3 @@
+site,action,type,name,title,target,regex,replace-text
+site_slug,grep,link,link_title,,url,$,.org
+site_slug,grep,page,,page_title,content,^,new_content

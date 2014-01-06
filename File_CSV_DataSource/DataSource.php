@@ -2148,20 +2148,23 @@ class File_CSV_DataSource
 
         while ($keys = fgetcsv($res, $l, $d, $e)) {
 
-			if( ($headers == null) || ($keys[0] == 'h') )
+			//file_put_contents( dirname(__FILE__).'/keys.txt', print_r($keys, true), FILE_APPEND );
+
+			if( $keys[0] == 'h' )
 			{
-				echo 'header';
-				if( $keys[0] == 'h' )
-					$headers = $keys;
-				
+				$headers = $keys;
+				continue;
 			}
-			else if( $keys[0] == '' )
+			
+			if( $headers == null ) 
+				continue;
+
+			if( $keys[0] != '#' )
 			{
-				echo 'row';
 				$row = array();
 				for( $i = 1; $i < count($keys); $i++ )
 				{
-					if( $headers[$i] !== '' )
+					if( $headers[$i] != '' )
 					{
 						$row[$headers[$i]] = $keys[$i];
 					}

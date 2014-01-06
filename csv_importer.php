@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: CSV Importer with UNCC Enhancements
-Description: Import data as posts from a CSV file. <em>You can reach the original author at <a href="mailto:d.v.kobozev@gmail.com">d.v.kobozev@gmail.com</a></em>.
-Version: 0.3.7.uncc
-Author: Denis Kobozev, Crystal Barton
+Plugin Name: CSV Importer
+Description: Import data as posts from a CSV file. <em>You can reach the author at <a href="mailto:d.v.kobozev@gmail.com">d.v.kobozev@gmail.com</a></em>.
+Version: 0.3.7
+Author: Denis Kobozev
 */
 
 /**
@@ -229,6 +229,9 @@ class CSVImporterPlugin
         $skipped = 0;
         $this->imported = 0;
         $comments = 0;
+        
+        $this->log['notice'][] = 'Row count: '.count($csv->get_rows());
+        
         foreach ($csv->get_rows() as $data)
         {
         	//$this->log['notice'][] = print_r($data, TRUE);
@@ -446,7 +449,10 @@ class CSVImporterPlugin
 
     	// password
     	if( !empty($data['password']) ) $post['post_password'] = $data['password'];
-    	    	
+    	
+    	// taxonomy
+    	$post['tax_input'] = $this->get_taxonomies($data);
+    	
 		return $post;
     }
     

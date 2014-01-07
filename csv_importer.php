@@ -696,7 +696,14 @@ class CSVImporterPlugin
 				break;
 		}
 
-		$post[$key] = preg_replace('#'.$data['regex'].'#', $data['replace-text'], $post[$key]);
+		$pattern = '#'.$data['regex'].'#';
+        if( preg_match($pattern, $post[$key]) != 1 )
+        {
+        	$this->log['error'][] = "No grep match '".$data['regex']."' for post '".$data['title']."'.";
+        	return;
+        }
+
+		$post[$key] = preg_replace($pattern, $data['replace-text'], $post[$key]);
 		$this->update_post($post, $post['ID']);
     }
     
@@ -933,6 +940,13 @@ class CSVImporterPlugin
 				$this->log['error'][] = "Invalid subject type: '".$data['subject']."'.";
 				break;
 		}
+
+		$pattern = '#'.$data['regex'].'#';
+        if( preg_match($pattern, $post[$key]) != 1 )
+        {
+        	$this->log['error'][] = "No grep match '".$data['regex']."' for link '".$data['name']."'.";
+        	return;
+        }
 
 		$link[$key] = preg_replace('#'.$data['regex'].'#', $data['replace-text'], $link[$key]);
 		$this->update_link($link, $link['link_id']);    	

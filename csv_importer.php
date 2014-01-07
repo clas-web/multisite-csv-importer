@@ -116,10 +116,9 @@ class CSVImporterPlugin
     function form() {
         $opt_draft = $this->process_option('csv_importer_import_as_draft',
             'publish', $_POST);
-        $opt_cat = $this->process_option('csv_importer_cat', 0, $_POST);
 
         if ('POST' == $_SERVER['REQUEST_METHOD']) {
-            $this->post(compact('opt_draft', 'opt_cat'));
+            $this->post(compact('opt_draft'));
         }
 
         // form HTML {{{
@@ -133,10 +132,6 @@ class CSVImporterPlugin
         <input name="_csv_importer_import_as_draft" type="hidden" value="publish" />
         <label><input name="csv_importer_import_as_draft" type="checkbox" <?php if ('draft' == $opt_draft) { echo 'checked="checked"'; } ?> value="draft" /> Import posts as drafts</label>
         </p>
-
-        <!-- Parent category -->
-        <p>Organize into category <?php wp_dropdown_categories(array('show_option_all' => 'Select one ...', 'hide_empty' => 0, 'hierarchical' => 1, 'show_count' => 0, 'name' => 'csv_importer_cat', 'orderby' => 'name', 'selected' => $opt_cat));?><br/>
-            <small>This will create new categories inside the category parent you choose.</small></p>
 
         <!-- File input -->
         <p><label for="csv_import">Upload file:</label><br/>

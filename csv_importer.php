@@ -1,12 +1,15 @@
 <?php
 /*
-Plugin Name: CSV Importer
-Description: Import data as posts from a CSV file. <em>You can reach the author at <a href="mailto:d.v.kobozev@gmail.com">d.v.kobozev@gmail.com</a></em>.
-Version: 0.3.7
-Author: Denis Kobozev
+Plugin Name: Multisite CSV Importer
+Description: -
+Version: 0.1.0
+Author: Crystal Barton
 */
 
 /**
+ * based on CSV Importer
+ * Original Author: Denis Kobozev
+ *
  * LICENSE: The MIT License {{{
  *
  * Copyright (c) <2009> <Denis Kobozev>
@@ -37,33 +40,34 @@ Author: Denis Kobozev
 
 
 
+add_action( 'network_admin_menu', 'mcsv_add_network_admin_page' );
+
+
 /**
- * Creates the 'CSV Importer' admin page under 'Network Admin'.
+ * Creates the 'Multisite CSV Importer' admin page under 'Network Admin'.
  *
  * @return void
  */
-function csv_add_network_admin_page()
+function mcsv_add_network_admin_page()
 {
-    require_once ABSPATH . '/wp-admin/admin.php';
-    $plugin = new CSVImporterPlugin;
-	add_submenu_page(							
-		'settings.php',							// parent slug
-		__('CSV Importer','csv-importer'),		// page title
-		__('CSV Importer','csv-importer'),		// menu title
-		'manage_options',						// capability
-		__FILE__,								// menu_slug
-		array($plugin, 'form')					// function
+    require_once( ABSPATH.'/wp-admin/admin.php' );
+    $plugin = new MultisiteCSVImporterPlugin();
+
+	add_submenu_page(
+		'settings.php',
+		__('Multisite CSV Importer', 'multisite-csv-importer'),
+		__('Multisite CSV Importer', 'multisite-csv-importer'),
+		'manage_options',
+		'multisite-csv-importer',
+		array( $plugin, 'form' )
 	);
 }
-add_action( 'network_admin_menu', 'csv_add_network_admin_page' );
 
 
 
-class CSVImporterPlugin
+class MultisiteCSVImporterPlugin
 {
     var $log = array();
-
-
 
     /**
      * Determine value of option $name from database, $default value or $params,
@@ -74,7 +78,8 @@ class CSVImporterPlugin
      * @param array  $params
      * @return string
      */
-    function process_option($name, $default, $params) {
+    function process_option($name, $default, $params)
+    {
         if (array_key_exists($name, $params)) {
             $value = stripslashes($params[$name]);
         } elseif (array_key_exists('_'.$name, $params)) {
@@ -190,8 +195,10 @@ class CSVImporterPlugin
      * @param array $options
      * @return void
      */
-    function post($options) {
-        if (empty($_FILES['csv_import']['tmp_name'])) {
+    function post($options)
+    {
+        if( empty($_FILES['csv_import']['tmp_name']) )
+        {
             $this->log['error'][] = 'No file uploaded, aborting.';
             $this->print_messages();
             return;
@@ -199,12 +206,13 @@ class CSVImporterPlugin
 
         require_once 'File_CSV_DataSource/DataSource.php';
 
-        $time_start = microtime(true);
+        $time_start = microtime( true );
         $csv = new File_CSV_DataSource;
         $file = $_FILES['csv_import']['tmp_name'];
-        $this->stripBOM($file);
+        $this->stripBOM( $file );
 
-        if (!$csv->load($file)) {
+        if( !$csv->load($file) )
+        {
             $this->log['error'][] = 'Failed to load file, aborting.';
             $this->print_messages();
             return;
@@ -217,7 +225,8 @@ class CSVImporterPlugin
         // in the bowels of wp_insert_post(). We need strtotime() to return
         // correct time before the call to wp_insert_post().
         $tz = get_option('timezone_string');
-        if ($tz && function_exists('date_default_timezone_set')) {
+        if( $tz && function_exists('date_default_timezone_set') )
+        {
             date_default_timezone_set($tz);
         }
 
@@ -227,7 +236,7 @@ class CSVImporterPlugin
         
         $this->log['notice'][] = 'Row count: '.count($csv->get_rows());
         
-        foreach ($csv->get_rows() as $data)
+        foreach( $csv->get_rows() as $data )
         {
         	//$this->log['notice'][] = print_r($data, TRUE);
         	//continue;
@@ -1118,7 +1127,7 @@ class CSVImporterPlugin
     
     
     
-    /**
+	/**
      * Parse taxonomy data from the file
      *
      * array(
@@ -1131,17 +1140,23 @@ class CSVImporterPlugin
      * @param array $data
      * @return array
      */
-    function get_taxonomies($data) {
+    private function get_taxonomies( $data )
+    {
         $taxonomies = array();
-        foreach ($data as $k => $v) {
-            if (preg_match('/^csv_ctax_(.*)$/', $k, $matches)) {
-                $t_name = $matches[1];
-                if ($this->taxonomy_exists($t_name)) {
-                    $taxonomies[$t_name] = $this->create_terms($t_name,
-                        $data[$k]);
-                } else {
-                    $this->log['error'][] = "Unknown taxonomy $t_name";
-                }
+        foreach ($data as $k => $v) 
+        {
+            if( preg_match('/^taxonomy-(.*)$/', $k, $matches) ) 
+            {
+                $tax_name = $matches[1];
+               	$taxonomy = get_taxonomy( $tax_name );
+
+				if( $taxonomy === false )
+				{
+                    $this->log['error'][] = "Unknown taxonomy: '$tax_name'";
+                    continue;
+				}
+				
+				$taxonomies[$tax_name] = $this->create_terms( $tax_name, $data[$k] );
             }
         }
         return $taxonomies;
@@ -1158,115 +1173,50 @@ class CSVImporterPlugin
      * @param string $field
      * @return mixed
      */
-    function create_terms($taxonomy, $field) {
-        if (is_taxonomy_hierarchical($taxonomy)) {
+    private function create_terms( $taxonomy_name, $fields )
+    {
+ 		$terms = array_map( 'trim', explode(',', $fields) );
+
+		if( is_taxonomy_hierarchical($taxonomy_name) )
+        {
             $term_ids = array();
-            foreach ($this->_parse_tax($field) as $row) {
-                list($parent, $child) = $row;
-                $parent_ok = true;
-                if ($parent) {
-                    $parent_info = $this->term_exists($parent, $taxonomy);
-                    if (!$parent_info) {
-                        // create parent
-                        $parent_info = wp_insert_term($parent, $taxonomy);
-                    }
-                    if (!is_wp_error($parent_info)) {
-                        $parent_id = $parent_info['term_id'];
-                    } else {
-                        // could not find or create parent
-                        $parent_ok = false;
-                    }
-                } else {
-                    $parent_id = 0;
-                }
-
-                if ($parent_ok) {
-                    $child_info = $this->term_exists($child, $taxonomy, $parent_id);
-                    if (!$child_info) {
-                        // create child
-                        $child_info = wp_insert_term($child, $taxonomy,
-                            array('parent' => $parent_id));
-                    }
-                    if (!is_wp_error($child_info)) {
-                        $term_ids[] = $child_info['term_id'];
-                    }
-                }
+            
+            foreach( $terms as $term )
+            {
+		 		$heirarchy = array_map( 'trim', explode('>', $term) );
+            	
+            	$parent = null;
+            	for( $i = 0; $i < count($heirarchy); $i++ )
+            	{
+            		if( !term_exists($heirarchy[$i], $taxonomy_name, $parent) )
+            		{
+            			$args = array();
+            			if( $parent ) $args['parent'] = $parent;
+            			
+            			$result = wp_insert_term( $heirarchy[$i], $taxonomy_name, $args );
+            			if( is_wp_error($result) )
+            			{
+            				$this->log['error'][] = 'Unable to insert '.$taxonomy_name.'term: '.$heirarchy[$i];
+            				break;
+            			}
+            		}
+            		
+            		$term_object = get_term_by( 'name', $heirarchy[$i], $taxonomy_name );
+            		if( is_wp_error($term_object) )
+            		{
+           				$this->log['error'][] = 'Invalid '.$taxonomy_name.'term: '.$heirarchy[$i];
+           				break;
+            		}
+            		
+            		$term_ids[] = $term_object->term_id;
+            	}
             }
+        
             return $term_ids;
-        } else {
-            return $field;
         }
+
+		return $terms;
     }
-
-
-
-    /**
-     * Compatibility wrapper for WordPress term lookup.
-     */
-    function term_exists($term, $taxonomy = '', $parent = 0) {
-        if (function_exists('term_exists')) { // 3.0 or later
-            return term_exists($term, $taxonomy, $parent);
-        } else {
-            return is_term($term, $taxonomy, $parent);
-        }
-    }
-
-
-
-    /**
-     * Compatibility wrapper for WordPress taxonomy lookup.
-     */
-    function taxonomy_exists($taxonomy) {
-        if (function_exists('taxonomy_exists')) { // 3.0 or later
-            return taxonomy_exists($taxonomy);
-        } else {
-            return is_taxonomy($taxonomy);
-        }
-    }
-
-
-
-    /**
-     * Hierarchical taxonomy fields are tiny CSV files in their own right.
-     *
-     * @param string $field
-     * @return array
-     */
-    function _parse_tax($field) {
-        $data = array();
-        if (function_exists('str_getcsv')) { // PHP 5 >= 5.3.0
-            $lines = $this->split_lines($field);
-
-            foreach ($lines as $line) {
-                $data[] = str_getcsv($line, ',', '"');
-            }
-        } else {
-            // Use temp files for older PHP versions. Reusing the tmp file for
-            // the duration of the script might be faster, but not necessarily
-            // significant.
-            $handle = tmpfile();
-            fwrite($handle, $field);
-            fseek($handle, 0);
-
-            while (($r = fgetcsv($handle, 999999, ',', '"')) !== false) {
-                $data[] = $r;
-            }
-            fclose($handle);
-        }
-        return $data;
-    }
-
-
-
-    /**
-     * Try to split lines of text correctly regardless of the platform the text
-     * is coming from.
-     */
-    function split_lines($text) {
-        $lines = preg_split("/(\r\n|\n|\r)/", $text);
-        return $lines;
-    }
-
 
 
     function add_comments($post_id, $data) {

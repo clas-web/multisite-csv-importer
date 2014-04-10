@@ -1,10 +1,10 @@
-# CSV Importer
-- Contributors: dvkob
-- Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=4YJEU5U2Y4LTS&lc=US&item_name=Support%20CSV%20Importer%20development&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
-- Tags: csv, import, batch, spreadsheet, excel
-- Requires at least: 2.0.2
-- Tested up to: 3.2.1
-- Stable tag: 0.3.6
+# Multisite CSV Importer
+- Tags: multisite, csv, import, batch, spreadsheet, csv
+- Version: 0.1.0
+- Author: Crystal Barton
+- Description: -
+
+
 
 Import posts from CSV files into WordPress.
 
@@ -51,7 +51,7 @@ Installing the plugin:
 
 ## Usage
 
-Click on the CSV Importer link on your WordPress admin page, choose the
+Click on the CSV Importer link on your WordPress network admin page, choose the
 file you would like to import and click Import. The `examples` directory
 inside the plugin's directory contains several files that demonstrate
 how to use the plugin. The best way to get started is to import one of
@@ -88,7 +88,7 @@ These four fields are required for all posts and pages.
 #### Adding Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page"
+- _type_ : "post" or "page" or custom post type.
 - _action_ : "add"
   - _add_ : Adds a post or page, but does not check for duplicates before
   creation.
@@ -105,12 +105,12 @@ These four fields are required for all posts and pages.
 - _password_ : Password for post (default: no password).
 - _categories_ : One or more categories seperated by a comma. _Posts only._
 - _tag_ : One or more tags seperated by a comma. _Posts only._
-
+- _taxonomy-{taxonomy-slug}_ : One or more custom taxonomy names separated by a comma.
 
 #### Updating and Replacing Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page"
+- _type_ : "post" or "page" or custom post type.
 - _action_ : "update" or "replace"
   - _update_ : Updates a post or page, if it exists.
   - _replace_ : Replaces a post or page, if it exists, otherwise it creates the 
@@ -131,7 +131,7 @@ These four fields are required for all posts and pages.
 #### Prepending and Appending to Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page"
+- _type_ : "post" or "page" or custom post type.
 - _action_ : "prepend" or "append"
   - _prepend_ : Prepends data to a post or page's excerpt and content.
   - _append_ : Appends data to a post or page's excerpt and content.
@@ -142,7 +142,7 @@ These four fields are required for all posts and pages.
 #### Deleting Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page"
+- _type_ : "post" or "page" or custom post type.
 - _action_ : "delete"
   - _delete_ : Deletes a post or page.
 - _title_ : The title of the post or page.
@@ -150,7 +150,7 @@ These four fields are required for all posts and pages.
 #### GREP Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page"
+- _type_ : "post" or "page" or custom post type.
 - _action_ : "grep"
   - _grep_ : Updates a portion of a post or page using a regex expression and 
   replacement text.
@@ -230,61 +230,6 @@ These four fields are required for all links.
 - _subject_ : The subject of the search and replace.  Valid options are: "name", "url", "description".
 - _regex_ : The regex to match against the subject.
 - _replace-text_ : The text to replace the matched portion of the subject.
-
-
-### New Features
-
-__New in version 0.3.2__
-  
-In prior versions, importing rows as pages could be specified on a per-file basis using the plugins UI. In 0.3.2, `csv_post_type` column was added to support custom post types as well.
-Refer to the WordPress [documentation on custom post types][custom_post_types] for more info on how to set up custom post types.
-
-- `csv_post_excerpt` - post excerpt
-
-- `csv_post_categories` - a comma separated list of category names or ids.
-
-__New in version 0.3.5__
-
-It's also possible to assign posts to non-existing subcategories, using &gt; to denote category relationships, e.g. `Animalia > Chordata > Mammalia`.  If any of the categories in the chain does not exist, the plugin will automatically create it. It's also possible to specify the parent category using an id, as in `42 > Primates > Callitrichidae`, where `42` is an existing category id.
-
-- `csv_post_tags` - a comma separated list of tags.
-
-- `csv_post_date` - about any English textual description of a date and time.
-  For example, `now`, `11/16/2009 0:00`, `1999-12-31 23:55:00`, `+1 week`,
-  `next Thursday`, `last year` are all valid descriptions. For technical
-  details, consult PHP's `strtotime()` function [documentation][strtotime].
-
-[custom_post_types]: http://codex.wordpress.org/Custom_Post_Types
-[strtotime]: http://php.net/manual/en/function.strtotime.php
-
-
-### Custom fields
-
-Any column that doesn't start with `csv_` is considered to be a custom field
-name. The data in that column will be imported as the custom fields value.
-
-
-### General remarks
-
-- WordPress pages [don't have categories or tags][pages].
-- Most columns are optional. Either `csv_post_title`, `csv_post_post` or
-  `csv_post_excerpt` are sufficient to create a post. If all of these
-  columns are empty in a row, the plugin will skip that row.
-- The plugin will attempt to reuse existing categories or tags; if an
-  existing category or tag cannot be found, the plugin will create it.
-- To specify a category that has a greater than sign (>) in the name, use
-  the HTML entity `&gt;`
-
-[pages]: http://codex.wordpress.org/Pages
-
-
-### Advanced usage
-
-- `csv_post_author` - numeric user id or login name. If not specified or
-  user does not exist, the plugin will assign the posts to the user
-  performing the import.
-- `csv_post_slug` - post slug used in permalinks.
-- `csv_post_parent` - post parent id.
 
 
 ## Custom taxonomies

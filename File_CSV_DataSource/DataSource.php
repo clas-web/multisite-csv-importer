@@ -70,7 +70,8 @@ class File_CSV_DataSource
         'delimiter' => ',',
         'eol' => ";",
         'length' => 999999,
-        'escape' => '"'
+        'escape' => '\\',
+        'enclosure' => '"',
     );
 
     protected
@@ -2142,13 +2143,15 @@ class File_CSV_DataSource
         $d = $this->settings['delimiter'];
         $e = $this->settings['escape'];
         $l = $this->settings['length'];
+        $n = $this->settings['enclosure'];
         $headers = null;
         
         $res = fopen($this->_filename, 'r');
 
-        while ($keys = fgetcsv($res, $l, $d, $e)) {
+        while ($keys = fgetcsv($res, $l, $d, $n, $e)) {
 
 			//file_put_contents( dirname(__FILE__).'/keys.txt', print_r($keys, true), FILE_APPEND );
+			$keys = array_map( 'trim', $keys );
 
 			if( $keys[0] == 'h' )
 			{

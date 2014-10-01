@@ -1,0 +1,5 @@
+h,site,action,type,name,terms
+#,test-new-site,add,taxonomy,category,"parent > child, single, grandparent > parent > child"
+#,test-new-site,add,taxonomy,post_tag,"one, two, three, four"
+#,test-new-site,delete,taxonomy,category,single
+#,test-new-site,delete,taxonomy,category,"parent > child"

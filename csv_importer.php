@@ -301,7 +301,28 @@ class MultisiteCSVImporterPlugin
         			call_user_func( array(&$this, $data['action'].'_link'), $data );
         			restore_current_blog();
         			break;
-        			
+        		
+        		case 'taxonomy':
+        			if( empty($data['name']) )
+        			{
+        				$this->log['error'][] = "The name of the taxonomy must be specified.";
+        				continue;
+        			}
+        			if( empty($data['terms']) )
+        			{
+        				$this->log['error'][] = "The terms of the taxonomy must be specified.";
+        				continue;
+        			}
+        			if( !in_array( $data['action'], array('add','delete') ))
+        			{
+        				$this->log['error'][] = "Invalid action type '".$data['action']."' for taxonomy.";
+        				continue;
+        			}
+        			switch_to_blog($site_id);
+        			call_user_func( array(&$this, $data['action'].'_taxonomy_terms'), $data );
+        			restore_current_blog();
+        			break;
+        				
         		default:
         			$this->log['error'][] = "Invalid type: '".$data['type']."'";
        				continue;
@@ -960,9 +981,255 @@ class MultisiteCSVImporterPlugin
 		$link[$key] = preg_replace('#'.$data['regex'].'#', $data['replace-text'], $link[$key]);
 		$this->update_link($link, $link['link_id']);    	
     }
-	
-	
-	
+
+
+
+    /**
+     * Gets the taxonomy term id of a taxonomy term.
+     *
+     * @param string $name
+     * @return int|null
+     */
+    function get_taxonomuy_term_id( $name, $taxonomy )
+    {
+    	// TODO...
+    	//get_taxonomy( $taxonomy );
+    	//get_term( $term, $taxonomy, $output, $filter );
+    	
+		return NULL;    	
+    }
+    
+
+
+	/**
+	 * Gets the data for a taxonomy term.
+	 *
+	 * @param string $name
+	 * @return array|null
+	 */
+	function get_taxonomy_term_data( $name, $taxonomy )
+    {
+    	$term_id = $this->get_taxonomuy_term_id( $name, $taxonomy );
+    	
+    	if( $term_id )
+    		return // TODO....
+    	
+    	return NULL;
+    }
+    
+    
+    
+	/**
+	 * Prepares the taxonomy term data to be used when adding or updating.
+	 *
+	 * @param array $data
+	 * @return array
+	 */
+	function sanitize_taxonomy_values( $data )
+	{
+		$taxonomy = array();
+		
+		$taxonomy['type'] = $data['type'];
+		$taxonomy['action'] = $data['action'];
+		
+		// taxonomy name
+		$taxonomy['taxonomy'] = ( !empty($data['name']) ? convert_chars($data['name']) : '' );
+		
+		// terms
+		$taxonomy['terms'] = ( !empty($data['terms']) ? explode(',', $data['terms']) : array() );
+		$taxonomy['terms'] = array_filter( $taxonomy['terms'], 'convert_chars' );
+		$taxonomy['terms'] = array_filter( $taxonomy['terms'], 'trim' );
+		
+		return $taxonomy;
+	}
+    
+    
+    
+    /**
+     * Adds taxonomy terms without checking if it already exists, it could result in duplicates.
+     *
+     * @param array $data
+     * @return void
+     */
+    function add_taxonomy_terms($data)
+    {
+    	//
+    	// sanatize data.
+    	//
+     	$tax = $this->sanitize_taxonomy_values($data);
+		$taxonomy_name = $tax['taxonomy'];
+		$terms = $tax['terms'];
+
+		//
+		// check if custom taxonomy exists.
+		//
+		$taxonomy = get_taxonomy( $taxonomy_name );
+		if( !$taxonomy )
+		{
+			$this->log['error'][] = "Taxonomy '$taxonomy_name' does not exist.";
+			return NULL;
+		}
+        
+        //
+        // insert each term, if they don't already exist.
+        //
+        foreach( $terms as $term )
+        {
+			if( !$taxonomy->hierarchical )
+			{
+				//
+				// check if the term exists.
+				//
+				$term_object = term_exists( $term, $taxonomy_name );
+				if( isset($term_object['term_id']) ) continue;
+				
+				//
+				// insert term.
+				//
+				$term_object = wp_insert_term( $term, $taxonomy_name );	
+				if( !isset($term_object['term_id']) )
+				{
+					$this->log['error'][] = "Unable to add '$taxonomy_name' taxonomy term '$term'.";
+				}
+			}
+			else
+			{
+				//
+				// get the hierarchy of the term to delete.
+				//
+				$hierarchy = explode( '>', $term );
+				$hierarchy = array_filter( $hierarchy, 'trim' );
+				
+				//	
+				// find/create the hierarchy of the term.
+				//
+				$parent_id = 0;
+				$term_name = null;
+				$term_object = null;
+				for( $i = 0; $i < count($hierarchy); $i++ )
+				{
+					$term_name = $hierarchy[$i];
+					$term_object = term_exists( $term_name, $taxonomy_name, $parent_id );
+
+					if( !isset($term_object['term_id']) )
+					{
+						$term_object = wp_insert_term( $term_name, $taxonomy_name, array( 'parent' => $parent_id ) );
+
+						if( !isset($term_object['term_id']) )
+						{
+							$this->log['error'][] = "Unable to add '$taxonomy_name' taxonomy term '$t'.";
+							continue;
+						}
+					}
+					
+					$parent_id = $term_object['term_id'];
+				}
+			}
+        }
+    }
+
+
+
+	/**
+	 * Deletes taxonomy terms, if it exists.
+	 *
+	 * @param array $data
+	 * @return void
+	 */    
+    function delete_taxonomy_terms($data)
+    {
+    	//
+    	// sanitize data.
+    	//
+     	$tax = $this->sanitize_taxonomy_values($data);
+		$taxonomy_name = $tax['taxonomy'];
+		$terms = $tax['terms'];
+		
+		//
+		// check if the custom taxonomy exists.
+		//
+		$taxonomy = get_taxonomy( $taxonomy_name );
+		if( !$taxonomy )
+		{
+			$this->log['error'][] = "Taxonomy '$taxonomy_name' does not exist.";
+			return NULL;
+		}
+		
+		//
+		// delete each term.
+		//
+		foreach( $terms as $term )
+        {
+			if( !$taxonomy->hierarchical )
+			{
+				//
+				// check if the term exists.
+				//
+				$term_object = term_exists( $term, $taxonomy_name );
+				if( !isset($term_object['term_id']) ) continue;
+				
+				//
+				// delete the term.
+				//
+				$delete_result = wp_delete_term( $term_object['term_id'], $taxonomy_name );			
+				if( $delete_result !== true )
+				{
+					$this->log['error'][] = "Unable to delete '$taxonomy_name' taxonomy term '$term'.";
+				}
+			}
+			else
+			{
+				//
+				// get the hierarchy of the term to delete.
+				//
+				$hierarchy = explode( '>', $term );
+				$hierarchy = array_filter( $hierarchy, 'trim' );
+
+				//	
+				// find the parent id of the term.
+				//
+				$parent_id = 0;
+				$term_name = null;
+				$term_object = null;
+				for( $i = 0; $i < count($hierarchy)-1; $i++ )
+				{
+					$term_name = $hierarchy[$i];
+					$term_object = term_exists( $term_name, $taxonomy_name, $parent_id );
+					if( !isset($term_object['term_id']) )
+					{
+						$parent_id = null;
+						break;
+					}
+					
+					$parent_id = $term_object['term_id'];
+				}
+				
+				//
+				// if the parent was not found, then no need to delete term.
+				//
+				if( $parent_id === null ) continue;
+				
+				//
+				// check if the term exists.
+				//
+				$term_name = $hierarchy[count($hierarchy)-1];
+				$term_object = term_exists( $term_name, $taxonomy_name, $parent_id );
+				if( !isset($term_object['term_id']) ) continue;
+				
+				//
+				// delete the term.
+				//
+				$delete_result = wp_delete_term( $term_object['term_id'], $taxonomy_name );
+				if( $delete_result !== true )
+				{
+					$this->log['error'][] = "Unable to delete '$taxonomy_name' taxonomy term '$term'.";
+				}
+			}
+        }
+    }
+
+
+
 	/**
 	 * Get the link ids for the categories needed for the link.  The categories are
 	 * created if it doesn't exist.
@@ -1048,6 +1315,76 @@ class MultisiteCSVImporterPlugin
         }
         return $ids;
     }
+
+
+
+    /**
+     * Return an array of taxonomy ids.
+     *
+     * @param string  $data csv_post_categories cell contents
+     * @param string  $taxonomy_name name of the custom taxonomy
+     * @param integer $common_parent_id common parent id for all categories
+     * @return array category ids
+     */
+	function create_taxonomy_terms( $terms, $taxonomy_name, $replace )
+	{
+		$ids = array(
+			'post' => array(),
+			'cleanup' => array(),
+		);
+		
+		$taxonomy = get_taxonomy( $taxonomy_name );
+		
+		if( !$taxonomy )
+		{
+			$this->log['error'][] = "Taxonomy '$taxonomy_name' does not exist.";
+			return NULL;
+		}
+        
+        foreach($terms as $term)
+        {
+			if( !$taxonomy->hierarchical )
+			{
+				$inserted_term = wp_insert_term( $term, $taxonomy_name );
+			
+				if( !isset($inserted_term['term_id']) )
+				{
+					$this->log['error'][] = "Unable to add taxonomy term '$term'.";
+					continue;
+				}
+			}
+			else
+			{
+				$hierarchy = explode( '>', $term );
+				$hierarchy = array_filter( $hierarchy, 'trim' );
+				$p = 0;
+				$t = null;
+			
+				for( $i = 0; $i < count($hierarchy); $i++ )
+				{
+					$t = $hierarchy[$i];
+					
+					if( !term_exists( $t, $taxonomy_name, array('parent' => $p) ) )
+					{
+						$inserted_term = wp_insert_term( $t, $taxonomy_name, array( 'parent' => $p ) );
+
+						if( !isset($inserted_term['term_id']) )
+						{
+							$this->log['error'][] = "Unable to add taxonomy term '$t'.";
+							break;
+						}
+					
+						$p = $inserted_term['term_id'];
+					}
+				}
+			}
+        }
+        
+        return $ids;
+    }
+
+
+
 
 
 

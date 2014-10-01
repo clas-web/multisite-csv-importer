@@ -234,6 +234,8 @@ class MultisiteCSVImporterPlugin
         $this->imported = 0;
         $comments = 0;
         
+		//$this->log['notice'][] = 'FILE: '.$file;
+		//$this->log['notice'][] = file_get_contents($file);
         $this->log['notice'][] = 'Row count: '.count($csv->get_rows());
         
         foreach( $csv->get_rows() as $data )
@@ -990,11 +992,10 @@ class MultisiteCSVImporterPlugin
      * @param string $name
      * @return int|null
      */
-    function get_taxonomuy_term_id( $name, $taxonomy )
+    function get_taxonomy_term_id( $term_name, $taxonomy_name )
     {
-    	// TODO...
-    	//get_taxonomy( $taxonomy );
-    	//get_term( $term, $taxonomy, $output, $filter );
+    	$term_object = term_exists( $term_name, $taxonomy_name );
+		if( isset($term_object['term_id']) ) return $term_object['term_id'];
     	
 		return NULL;    	
     }
@@ -1007,12 +1008,12 @@ class MultisiteCSVImporterPlugin
 	 * @param string $name
 	 * @return array|null
 	 */
-	function get_taxonomy_term_data( $name, $taxonomy )
+	function get_taxonomy_term_data( $term_name, $taxonomy_name )
     {
-    	$term_id = $this->get_taxonomuy_term_id( $name, $taxonomy );
+    	$term_id = $this->get_taxonomy_term_id( $term_name, $taxonomy_name );
     	
     	if( $term_id )
-    		return // TODO....
+    		return get_term( $term_id, $taxonomy_name );
     	
     	return NULL;
     }
@@ -1033,7 +1034,7 @@ class MultisiteCSVImporterPlugin
 		$taxonomy['action'] = $data['action'];
 		
 		// taxonomy name
-		$taxonomy['taxonomy'] = ( !empty($data['name']) ? convert_chars($data['name']) : '' );
+		$taxonomy['name'] = ( !empty($data['name']) ? convert_chars($data['name']) : '' );
 		
 		// terms
 		$taxonomy['terms'] = ( !empty($data['terms']) ? explode(',', $data['terms']) : array() );
@@ -1057,9 +1058,9 @@ class MultisiteCSVImporterPlugin
     	// sanatize data.
     	//
      	$tax = $this->sanitize_taxonomy_values($data);
-		$taxonomy_name = $tax['taxonomy'];
+		$taxonomy_name = $tax['name'];
 		$terms = $tax['terms'];
-
+		
 		//
 		// check if custom taxonomy exists.
 		//
@@ -1142,7 +1143,7 @@ class MultisiteCSVImporterPlugin
     	// sanitize data.
     	//
      	$tax = $this->sanitize_taxonomy_values($data);
-		$taxonomy_name = $tax['taxonomy'];
+		$taxonomy_name = $tax['name'];
 		$terms = $tax['terms'];
 		
 		//

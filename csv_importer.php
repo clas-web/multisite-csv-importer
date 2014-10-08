@@ -326,9 +326,39 @@ class MultisiteCSVImporterPlugin
         			break;
         				
         		default:
-        			$this->log['error'][] = "Invalid type: '".$data['type']."'";
-       				continue;
-        			break;
+        			
+					$all_custom_post_types = get_post_types( array ( '_builtin' => FALSE ) );
+
+					if( empty($all_custom_post_types) )
+					{
+	        			$this->log['error'][] = "Invalid type: '".$data['type']."'";
+    	    			break;
+    	    		}
+
+					$custom_types = array_keys( $all_custom_post_types );
+					
+					if( in_array($data['type'], $custom_types) )
+					{
+						if( empty($data['title']) )
+						{
+							$this->log['error'][] = "The title of the ".$data['type']." must be specified.";
+							continue;
+						}
+						if( !in_array( $data['action'], array('add','update','replace','prepend','append','delete','grep','add-taxonomy','update-taxonomy','delete-taxonomy') ))
+						{
+							$this->log['error'][] = "Invalid action type '".$data['action']."' for ".$data['type'].'.';
+							continue;
+						}
+						switch_to_blog($site_id);
+						call_user_func( array(&$this, (str_replace('-', '_', $data['action'])).'_post'), $data );
+						restore_current_blog();
+					}
+					else
+					{
+	        			$this->log['error'][] = "Invalid type: '".$data['type']."'";
+	        		}
+	        		
+	        		break;
         	}
         }
 

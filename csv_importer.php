@@ -278,13 +278,13 @@ class MultisiteCSVImporterPlugin
         				$this->log['error'][] = "The title of the ".$data['type']." must be specified.";
         				continue;
         			}
-        			if( !in_array( $data['action'], array('add','update','replace','prepend','append','delete','grep') ))
+        			if( !in_array( $data['action'], array('add','update','replace','prepend','append','delete','grep','add-taxonomy','update-taxonomy','delete-taxonomy') ))
         			{
         				$this->log['error'][] = "Invalid action type '".$data['action']."' for ".$data['type'].'.';
         				continue;
         			}
         			switch_to_blog($site_id);
-        			call_user_func( array(&$this, $data['action'].'_post'), $data );
+        			call_user_func( array(&$this, (str_replace('-', '_', $data['action'])).'_post'), $data );
         			restore_current_blog();
         			break;
         			
@@ -508,14 +508,14 @@ class MultisiteCSVImporterPlugin
         // create!
         $id = wp_insert_post($post);
 
-        if( !id )
+        if( !$id )
         {
         	if( $data['type'] !== 'page' )
         	{
             	foreach ($categories['cleanup'] as $category) 
                 	wp_delete_term($category, 'category');
             }
- 			$this->log['error'][] = "An error occured while adding the post: ".$post['name'];
+ 			$this->log['error'][] = "An error occured while adding the post: ".$post['post_title'];
         }
         else
         {
@@ -538,7 +538,7 @@ class MultisiteCSVImporterPlugin
     	{
     	    if( ($post_id = $this->get_post_id($data['title'], $data['type'])) === NULL )
     	    {
-    			$this->log['notice'][] = "Unable to retreive ".$data['type']." '".$data['title']."'.";
+    			$this->log['notice'][] = "Unable to retrieve ".$data['type']." '".$data['title']."'.";
     			return;
     		}
 
@@ -559,14 +559,14 @@ class MultisiteCSVImporterPlugin
 		
         $id = wp_update_post($post);
 
-        if( !id )
+        if( !$id )
         {
         	if( $data['type'] !== 'page' )
         	{
             	foreach ($categories['cleanup'] as $category) 
                 	wp_delete_term($category, 'category');
             }
- 			$this->log['error'][] = "An error occured while updating the post: ".$post['name'];
+ 			$this->log['error'][] = "An error occured while updating the post: ".$post['post_title'];
         }
         else
         {
@@ -674,7 +674,7 @@ class MultisiteCSVImporterPlugin
 
 		if( wp_delete_post( $post_id, TRUE ) === false )
 		{
- 			$this->log['error'][] = "An error occured while deleting the post: ".$post['name'];
+ 			$this->log['error'][] = "An error occured while deleting the post: ".$post['post_title'];
 		}
 		else
 		{
@@ -737,6 +737,222 @@ class MultisiteCSVImporterPlugin
 
 		$post[$key] = preg_replace($pattern, $data['replace-text'], $post[$key]);
 		$this->update_post($post, $post['ID']);
+    }
+    
+    
+	/**
+	 * 
+	 *
+	 * @param array $data
+	 * @param array 
+	 */    
+    function sanitize_post_taxonomy_values($data, $create_terms)
+    {
+    	$post = array();
+    	
+    	$post['post_type'] = $data['type'];
+
+		// title
+    	$post['post_title'] = ( !empty($data['title']) ? convert_chars($data['title']) : '' );    	
+    	
+    	// taxonomies
+    	$taxonomies = $this->get_taxonomies($data, $create_terms);
+    	
+    	if( !empty($data['tags']) )
+    	{
+    		$tags = $this->get_terms( 'post_tag', $data['tags'] );
+    		if( isset($taxonomies['post_tags']) )
+    			$taxonomies['post_tag'] = array_merge( $taxonomies['post_tag'], $tags );
+    		else
+    			$taxonomies['post_tag'] = $tags;
+	    }
+	    if( !empty($data['categories']) )
+    	{
+    		$categories = $this->get_terms( 'category', $data['categories'] );
+    		if( isset($taxonomies['category']) )
+    			$taxonomies['category'] = array_merge( $taxonomies['category'], $categories );
+    		else
+    			$taxonomies['category'] = $categories;
+	    }
+	    
+       	$post['taxonomies'] = $taxonomies;
+    	
+		return $post;
+    }
+    
+    
+	/**
+	 * 
+	 *
+	 * @param array $data
+	 * @param void
+	 */    
+    function add_taxonomy_post($data)
+    {
+    	$post = $this->sanitize_post_taxonomy_values($data, true);
+    	
+    	if( $post['post_type'] === 'page' )
+    	{
+    		$this->log['error'][] = "The page type does not support taxonomies.";
+    		return;
+    	}
+    	
+    	if( ($post_id = $this->get_post_id( $data['title'], $data['type'] )) === NULL )
+    		return;
+    	
+    	$taxonomies = array();
+    	foreach( $post['taxonomies'] as $taxonomy_name => $terms )
+    	{
+    		$taxonomy = get_taxonomy( $taxonomy_name );
+			if( !$taxonomy )
+			{
+				$this->log['error'][] = "Taxonomy '$taxonomy_name' does not exist.";
+				continue;
+			}
+			
+			$current_terms = wp_get_post_terms( $post_id, $taxonomy_name );
+			foreach( $current_terms as &$term )
+			{
+				if( $taxonomy->hierarchical )
+					$term = $term->term_id;
+				else
+					$term = $term->name;
+			}
+			
+			$taxonomies[$taxonomy_name] = array_unique( array_merge($current_terms, $terms) );
+    	}
+    	    	
+        $id = wp_update_post(
+        	array(
+        		'ID' => $post_id,
+        		'tax_input' => $taxonomies
+        	)
+        );
+
+        if( !$id )
+        {
+ 			$this->log['error'][] = "An error occured while adding taxonomies for post: ".$post['post_title'];
+        }
+        else
+        {
+	        $this->imported++;
+        }		
+    }
+    
+
+	/**
+	 * 
+	 *
+	 * @param array $data
+	 * @param void
+	 */    
+    function update_taxonomy_post($data)
+    {
+    	$post = $this->sanitize_post_taxonomy_values($data, true);
+    	
+    	if( $post['post_type'] === 'page' )
+    	{
+    		$this->log['error'][] = "The page type does not support taxonomies.";
+    		return;
+    	}
+    	
+    	if( ($post_id = $this->get_post_id( $data['title'], $data['type'] )) === NULL )
+    		return;
+    	
+    	$taxonomies = array();
+    	foreach( $post['taxonomies'] as $taxonomy_name => $terms )
+    	{
+    		$taxonomy = get_taxonomy( $taxonomy_name );
+			if( !$taxonomy )
+			{
+				$this->log['error'][] = "Taxonomy '$taxonomy_name' does not exist.";
+				continue;
+			}
+			
+			$taxonomies[$taxonomy_name] = $terms;
+    	}
+    	
+        $id = wp_update_post(
+        	array(
+        		'ID' => $post_id,
+        		'tax_input' => $taxonomies
+        	)
+        );
+
+        if( !$id )
+        {
+ 			$this->log['error'][] = "An error occured while updating taxonomies for post: ".$post['post_title'];
+        }
+        else
+        {
+	        $this->imported++;
+        }	
+    }
+    
+
+	/**
+	 * 
+	 *
+	 * @param array $data
+	 * @param void
+	 */    
+    function delete_taxonomy_post($data)
+    {
+    	$post = $this->sanitize_post_taxonomy_values($data, false);
+    	
+    	if( $post['post_type'] === 'page' )
+    	{
+    		$this->log['error'][] = "The page type does not support taxonomies.";
+    		return;
+    	}
+    	
+    	if( ($post_id = $this->get_post_id( $data['title'], $data['type'] )) === NULL )
+    		return;
+    	
+    	$taxonomies = array();
+    	foreach( $post['taxonomies'] as $taxonomy_name => $terms )
+    	{
+    		$taxonomy = get_taxonomy( $taxonomy_name );
+			if( !$taxonomy )
+			{
+				$this->log['error'][] = "Taxonomy '$taxonomy_name' does not exist.";
+				continue;
+			}
+			
+			$current_terms = wp_get_post_terms( $post_id, $taxonomy_name );
+			foreach( $current_terms as &$term )
+			{
+				if( $taxonomy->hierarchical )
+					$term = $term->term_id;
+				else
+					$term = $term->name;
+			}
+			
+			$new_term_list = array();
+			for( $i = 0; $i < count($current_terms); $i++ )
+			{
+				if( in_array($current_terms[$i], $terms) ) continue;
+				$new_term_list[] = $current_terms[$i];
+			}
+			
+			$taxonomies[$taxonomy_name] = $new_term_list;
+    	}
+
+        $id = wp_update_post(
+        	array(
+        		'ID' => $post_id,
+        		'tax_input' => $taxonomies
+        	)
+        );
+
+        if( !$id )
+        {
+ 			$this->log['error'][] = "An error occured while deleting taxonomies for post: ".$post['post_title'];
+        }
+        else
+        {
+	        $this->imported++;
+        }	
     }
     
     
@@ -1478,7 +1694,7 @@ class MultisiteCSVImporterPlugin
      * @param array $data
      * @return array
      */
-    private function get_taxonomies( $data )
+    private function get_taxonomies( $data, $create_terms = true )
     {
         $taxonomies = array();
         foreach ($data as $k => $v) 
@@ -1494,7 +1710,7 @@ class MultisiteCSVImporterPlugin
                     continue;
 				}
 				
-				$taxonomies[$tax_name] = $this->create_terms( $tax_name, $data[$k] );
+				$taxonomies[$tax_name] = $this->get_terms( $tax_name, $data[$k], $create_terms );
             }
         }
         return $taxonomies;
@@ -1511,9 +1727,10 @@ class MultisiteCSVImporterPlugin
      * @param string $field
      * @return mixed
      */
-    private function create_terms( $taxonomy_name, $fields )
+    private function get_terms( $taxonomy_name, $fields, $create_terms = true )
     {
- 		$terms = array_map( 'trim', explode(',', $fields) );
+    	if( !is_array($terms) )
+	 		$terms = array_map( 'trim', explode(',', $fields) );
 
 		if( is_taxonomy_hierarchical($taxonomy_name) )
         {
@@ -1528,15 +1745,17 @@ class MultisiteCSVImporterPlugin
             	{
             		if( !term_exists($heirarchy[$i], $taxonomy_name, $parent) )
             		{
-            			$args = array();
-            			if( $parent ) $args['parent'] = $parent;
+            			if( !$create_terms ) continue;
             			
-            			$result = wp_insert_term( $heirarchy[$i], $taxonomy_name, $args );
-            			if( is_wp_error($result) )
-            			{
-            				$this->log['error'][] = 'Unable to insert '.$taxonomy_name.'term: '.$heirarchy[$i];
-            				break;
-            			}
+						$args = array();
+						if( $parent ) $args['parent'] = $parent;
+					
+						$result = wp_insert_term( $heirarchy[$i], $taxonomy_name, $args );
+						if( is_wp_error($result) )
+						{
+							$this->log['error'][] = 'Unable to insert '.$taxonomy_name.'term: '.$heirarchy[$i];
+							break;
+						}
             		}
             		
             		$term_object = get_term_by( 'name', $heirarchy[$i], $taxonomy_name );
@@ -1545,9 +1764,9 @@ class MultisiteCSVImporterPlugin
            				$this->log['error'][] = 'Invalid '.$taxonomy_name.'term: '.$heirarchy[$i];
            				break;
             		}
-            		
-            		$term_ids[] = $term_object->term_id;
             	}
+            	
+            	$term_ids[] = $term_object->term_id;
             }
         
             return $term_ids;

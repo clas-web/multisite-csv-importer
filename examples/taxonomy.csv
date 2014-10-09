@@ -1,8 +1,5 @@
-h,site,action,type,name,terms,title,tags,categories
+h,site,action,type,name,terms
 #,test-new-site,add,taxonomy,category,"parent > child, single, grandparent > parent > child"
 #,test-new-site,add,taxonomy,post_tag,"one, two, three, four"
 #,test-new-site,delete,taxonomy,category,single
 #,test-new-site,delete,taxonomy,category,"parent > child"
-#,test-new-site,add-taxonomy,post,name,terms,"Post Name","one,two,three","catone > catchild,cattwo"
-#,test-new-site,update-taxonomy,post,name,terms,"Post Name","one,two","catone,cattwo"
-,test-new-site,delete-taxonomy,post,name,terms,"Post Name","one","cattwo"

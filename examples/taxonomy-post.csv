@@ -1,0 +1,4 @@
+h,site,action,type,title,tags,categories
+#,test-new-site,add-taxonomy,post,"Post Name","one,two,three","catone > catchild,cattwo"
+#,test-new-site,update-taxonomy,post,"Post Name","one,two","catone,cattwo"
+#,test-new-site,delete-taxonomy,post,"Post Name","one","cattwo"

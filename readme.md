@@ -60,7 +60,7 @@ these files and look at the results.
 CSV is a tabular format that consists of rows and columns. Each row in
 a CSV file represents a post, page, link, or taxonomy terms.
 
-### First Column
+__First Column__
 
 The first column of each row indicates how the row should be processed.
 

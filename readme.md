@@ -1,6 +1,6 @@
 # Multisite CSV Importer
 - Tags: multisite, csv, import, batch, spreadsheet, csv
-- Version: 0.1.0
+- Version: 0.2.0
 - Author: Crystal Barton
 - Description: -
 
@@ -58,7 +58,15 @@ how to use the plugin. The best way to get started is to import one of
 these files and look at the results.
 
 CSV is a tabular format that consists of rows and columns. Each row in
-a CSV file represents a post, page, or link.
+a CSV file represents a post, page, link, or taxonomy terms.
+
+### First Column
+
+The first column of each row indicates how the row should be processed.
+
+- _h_ : Indicates that the row contains header information (usually the first row of the spreadsheet).
+  All rows before the first header row are ignored.
+- _#_ : Comments out the row.  This row will be ignored and not processed at all.
 
 
 ### Posts and Pages
@@ -68,7 +76,7 @@ __Required Fields__
 These four fields are required for all posts and pages.
 
 - _site_ : The slug of the site.
-- _type_ : The type of resource to alter.  Valid types are: "post" or "page".
+- _type_ : "post" or "page" or a custom post type.
 - _action_ : The action to take on the object.  There are a number fo actions that can be taken.  Further details on each of the actions are detailed under the type section.
   - _add_ : Adds a post or page, but does not check for duplicates before
   creation.
@@ -84,11 +92,10 @@ These four fields are required for all posts and pages.
   Valid subject values: "title", "excerpt", "content", "slug", "guid"
 - _title_ : The title of the post or page.
 
-
 #### Adding Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page" or custom post type.
+- _type_ : "post" or "page" or custom post type
 - _action_ : "add"
   - _add_ : Adds a post or page, but does not check for duplicates before
   creation.
@@ -104,13 +111,13 @@ These four fields are required for all posts and pages.
 - _menu-order_ : The int value given to determine the posts order in the menu.
 - _password_ : Password for post (default: no password).
 - _categories_ : One or more categories seperated by a comma. _Posts only._
-- _tag_ : One or more tags seperated by a comma. _Posts only._
+- _tags_ : One or more tags seperated by a comma. _Posts only._
 - _taxonomy-{taxonomy-slug}_ : One or more custom taxonomy names separated by a comma.
 
 #### Updating and Replacing Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page" or custom post type.
+- _type_ : "post" or "page" or custom post type
 - _action_ : "update" or "replace"
   - _update_ : Updates a post or page, if it exists.
   - _replace_ : Replaces a post or page, if it exists, otherwise it creates the 
@@ -126,12 +133,14 @@ These four fields are required for all posts and pages.
 - _menu-order_ : The int value given to determine the posts order in the menu.
 - _password_ : Password for post (default: no password).
 - _categories_ : One or more categories seperated by a comma. _Posts only._
-- _tag_ : One or more tags seperated by a comma. _Posts only._
+- _tags_ : One or more tags seperated by a comma. _Posts only._
+- _taxonomy-{taxonomy-slug}_ : One or more custom taxonomy names separated by a comma.
+
 
 #### Prepending and Appending to Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page" or custom post type.
+- _type_ : "post" or "page" or custom post type
 - _action_ : "prepend" or "append"
   - _prepend_ : Prepends data to a post or page's excerpt and content.
   - _append_ : Appends data to a post or page's excerpt and content.
@@ -142,7 +151,7 @@ These four fields are required for all posts and pages.
 #### Deleting Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page" or custom post type.
+- _type_ : "post" or "page" or custom post type
 - _action_ : "delete"
   - _delete_ : Deletes a post or page.
 - _title_ : The title of the post or page.
@@ -150,7 +159,7 @@ These four fields are required for all posts and pages.
 #### GREP Posts or Pages
 
 - _site_ : The slug of the site.
-- _type_ : "post" or "page" or custom post type.
+- _type_ : "post" or "page" or custom post type
 - _action_ : "grep"
   - _grep_ : Updates a portion of a post or page using a regex expression and 
   replacement text.
@@ -160,6 +169,16 @@ These four fields are required for all posts and pages.
 - _regex_ : The regex to match against the subject.
 - _replace-text_ : The text to replace the matched portion of the subject.
 
+#### Add, Updating, or Deleting Taxonomy Terms
+
+- _site_ : The slug of the site.
+- _type_ : "post" or custom post type _Page type do not support taxonomies._
+- _action_ : "add-taxonomy", "update-taxonomy", "delete-taxonomy"
+- _title_ : The title of the post or page.
+- _categories_ : One or more categories seperated by a comma.
+- _tags_ : One or more tags seperated by a comma.
+- _taxonomy-{taxonomy-slug}_ : One or more custom taxonomy names separated by a comma.
+
 
 ### Links
 
@@ -168,7 +187,7 @@ __Required Fields__
 These four fields are required for all links.
 
 - _site_ : The slug of the site.
-- _type_ : The type of resource to alter.  Valid types are: post, page, link
+- _type_ : "link"
 - _action_ : The action to take on the object.  There are a number fo actions that can be taken.  Further details on each of the actions are detailed under the type section.
   - _add_ : Adds a link, but does not check for duplicates before creation.
   - _update_ : Updates a link, if it exists.
@@ -230,6 +249,21 @@ These four fields are required for all links.
 - _subject_ : The subject of the search and replace.  Valid options are: "name", "url", "description".
 - _regex_ : The regex to match against the subject.
 - _replace-text_ : The text to replace the matched portion of the subject.
+
+
+### Taxonomies
+
+__Required Fields__
+
+These four fields are required for all posts and pages.
+
+- _site_ : The slug of the site.
+- _type_ : "taxonomy"
+- _action_ : The action to take.
+  - _add_ : Adds the taxonomy terms specified.
+  - _delete_ : Deletes the taxonomy terms specified.
+- _name_ : The name of the taxonomy.
+- _terms_ : The terms to add or delete.
 
 
 ## Custom taxonomies

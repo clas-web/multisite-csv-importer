@@ -2,7 +2,10 @@
 - Tags: multisite, csv, import, batch, spreadsheet, csv
 - Version: 0.2.0
 - Author: Crystal Barton
-- Description: -
+- Description: Imports posts, taxonomies, etc. to blogs within a multisite install of 
+  WordPress using CSV files.  This is an altered version of the CSV Importer authored 
+  by Denis Kobozev.
+
 
 
 
@@ -21,8 +24,9 @@ a CSV file and the plugin will take care of the rest.
 
 ## Features
 
-- Imports post title, body, excerpt, tags, date, categories etc.
-- Supports custom fields, custom taxonomies and comments
+- Imports post title, body, excerpt, tags, date, categories, etc. into a site within
+  the multisite WordPress install.
+- Supports custom fields and custom taxonomies.
 - Deals with Word-style quotes and other non-standard characters using
   WordPress' built-in mechanism (same one that normalizes your input when you
   write your posts)
@@ -32,26 +36,20 @@ a CSV file and the plugin will take care of the rest.
 
 
 
-## Screenshots
-
-1.  Plugin's interface
-
-
-
 ## Installation
 
 Installing the plugin:
 
 1.  Unzip the plugin's directory into `wp-content/plugins`.
 1.  Activate the plugin through the 'Plugins' menu in WordPress.
-1.  The plugin will be available under Tools -> CSV Importer on
+1.  The plugin will be available under Tools -> Multisite CSV Importer on
     WordPress administration page.
 
 
 
 ## Usage
 
-Click on the CSV Importer link on your WordPress network admin page, choose the
+Click on the Multisite CSV Importer link on your WordPress network admin page, choose the
 file you would like to import and click Import. The `examples` directory
 inside the plugin's directory contains several files that demonstrate
 how to use the plugin. The best way to get started is to import one of

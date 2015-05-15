@@ -327,18 +327,24 @@ class MultisiteCSVImporterPlugin
         				
         		default:
         			
-					$all_custom_post_types = get_post_types( array ( '_builtin' => FALSE ) );
-
-					if( empty($all_custom_post_types) )
+//         			switch_to_blog($site_id);
+// 					$all_custom_post_types = get_post_types( array ( 'public' => true, '_builtin' => false ) );
+// 					var_dump($all_custom_post_types);
+// 
+// 					if( empty($all_custom_post_types) )
+// 					{
+// 	        			$this->log['error'][] = "Invalid type: '".$data['type']."'";
+//     	    			break;
+//     	    		}
+// 
+// 					$custom_types = array_keys( $all_custom_post_types );
+// 					restore_current_blog();
+// 					
+// 					if( in_array($data['type'], $custom_types) )
+					if( strpos($data['type'], 'post-') === 0 )
 					{
-	        			$this->log['error'][] = "Invalid type: '".$data['type']."'";
-    	    			break;
-    	    		}
-
-					$custom_types = array_keys( $all_custom_post_types );
-					
-					if( in_array($data['type'], $custom_types) )
-					{
+						$data['type'] = substr( $data['type'], 5 );
+						echo $data['type'];
 						if( empty($data['title']) )
 						{
 							$this->log['error'][] = "The title of the ".$data['type']." must be specified.";
@@ -828,7 +834,10 @@ class MultisiteCSVImporterPlugin
     	}
     	
     	if( ($post_id = $this->get_post_id( $data['title'], $data['type'] )) === NULL )
+    	{
+    		$this->log['notice'][] = "Unable to find post: ".$data['title'].' T:'.$data['type'];
     		return;
+    	}
     	
     	$taxonomies = array();
     	foreach( $post['taxonomies'] as $taxonomy_name => $terms )

@@ -2,8 +2,9 @@
 /*
 Plugin Name: Multisite CSV Importer
 Description: -
-Version: 0.2.0
+Version: 0.3.0
 Author: Crystal Barton
+GitHub Plugin URI: https://github.com/clas-web/multisite-csv-importer
 */
 
 /**
